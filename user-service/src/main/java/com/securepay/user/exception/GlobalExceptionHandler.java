@@ -2,6 +2,7 @@ package com.securepay.user.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -21,10 +22,21 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+
+        String message = ex.getBindingResult()
+            .getFieldError()
+            .getDefaultMessage();
+            
+        return buildResponse(message, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         return buildResponse("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 
     private ResponseEntity<Map<String, Object>> buildResponse(String message, HttpStatus status) {
         Map<String, Object> body = new HashMap<>();
