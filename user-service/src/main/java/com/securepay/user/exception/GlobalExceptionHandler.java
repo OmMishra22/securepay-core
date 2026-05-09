@@ -22,15 +22,34 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+    // @ExceptionHandler(MethodArgumentNotValidException.class)
+    // public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
 
-        String message = ex.getBindingResult()
-            .getFieldError()
-            .getDefaultMessage();
+    //     String message = ex.getBindingResult()
+    //         .getFieldError()
+    //         .getDefaultMessage();
             
-        return buildResponse(message, HttpStatus.BAD_REQUEST);
-    }
+    //     return buildResponse(message, HttpStatus.BAD_REQUEST);
+    // }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+
+    Map<String, Object> body = new HashMap<>();
+
+    body.put("timestamp", Instant.now().toEpochMilli());
+    body.put("status", HttpStatus.BAD_REQUEST.value());
+    body.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+
+    Map<String, String> validationErrors = new HashMap<>();
+
+    ex.getBindingResult().getFieldErrors().forEach(error -> {
+        validationErrors.put(error.getField(), error.getDefaultMessage());
+    });
+
+    body.put("messages", validationErrors);
+
+    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+}
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
