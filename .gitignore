@@ -1,0 +1,57 @@
+# Maven
+target/
+*.jar
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+.factorypath
+
+# Eclipse
+.settings/
+.classpath
+.project
+.metadata/
+
+# VS Code
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+
+# Docker
+docker-data/
+
+# Build
+out/
+
+# Spring Boot
+application-local.properties
+HELP.md
+
+# Mac/Linux temp
+*.swp
+
+# Merge conflicts
+*.orig
+
+# Java
+*.class
+
+# Maven Wrapper Logs
+.maven/
+
+# NetBeans
+nbproject/

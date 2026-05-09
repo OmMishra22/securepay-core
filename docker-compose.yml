@@ -1,0 +1,119 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: securepay-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: securepay
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: securepay
+      MYSQL_DATABASE: userdb
+      INTERNAL_SECRET: secret-key
+      LEDGER_URL: http://ledger-service:8080
+      LEDGER_USER: ledger
+      LEDGER_PASSWORD: ledger-password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - public
+      - internal
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: securepay
+      MYSQL_DATABASE: paymentdb
+      LEDGER_URL: http://ledger-service:8080
+      NOTIFICATION_URL: http://notification-service:8080
+      INTERNAL_SECRET: secret-key
+      LEDGER_USER: ledger
+      LEDGER_PASSWORD: ledger-password
+      NOTIFICATION_USER: notification
+      NOTIFICATION_PASSWORD: notification-password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: unless-stopped
+
+  ledger-service:
+    build:
+      context: ./ledger-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: securepay
+      MYSQL_DATABASE: ledgerdb
+      INTERNAL_SECRET: secret-key
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: securepay
+      MYSQL_DATABASE: notificationdb
+      INTERNAL_SECRET: secret-key
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - internal
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true
